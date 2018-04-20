@@ -33,6 +33,10 @@
 #include <unistd.h>
 #include <signal.h>
 
+// adding by tyu
+#include <limits>
+#include <cstdlib>
+#include <ctime>
 
 // libstage
 #include <stage.hh>
@@ -52,6 +56,9 @@
 #include <std_srvs/Empty.h>
 
 #include "tf/transform_broadcaster.h"
+
+#define random(x) (rand()%x)
+#define randab(a, b) (rand()%(b-a+1)+a)
 
 #define USAGE "stageros <worldfile>"
 #define IMAGE "image"
@@ -454,10 +461,21 @@ StageNode::WorldCallback()
                 msg.ranges.resize(sensor.ranges.size());
                 msg.intensities.resize(sensor.intensities.size());
 
+                srand((unsigned)time(NULL));
+
                 for(unsigned int i = 0; i < sensor.ranges.size(); i++)
                 {
-                    msg.ranges[i] = sensor.ranges[i];
-                    msg.intensities[i] = (uint8_t)sensor.intensities[i];
+                    if ( sensor.ranges[i] > sensor.range.max - 0.1 )
+                        msg.ranges[i] = std::numeric_limits<float>::infinity();
+                    else {
+                        const int t1 = random(99);
+                        const int t2 = randab(-4, 4);
+                        if ( t1 < 5 )
+                            msg.ranges[i] = std::numeric_limits<float>::infinity();
+                        else
+                            msg.ranges[i] = sensor.ranges[i] + static_cast<float>(t2)/100.0f;
+                    }
+                    msg.intensities[i] = 1;
                 }
 
                 if (robotmodel->lasermodels.size() > 1)
